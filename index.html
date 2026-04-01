@@ -1,570 +1,485 @@
-<div id="ngram-moodle-demo"></div>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Animierte n-Gramm-Demo</title>
+</head>
+<body style="margin:0;font-family:Inter,Arial,sans-serif;background:linear-gradient(160deg,#020617,#0f172a 45%,#111827);color:#e5e7eb;min-height:100vh;padding:24px;box-sizing:border-box;">
+  <div id="ngram-inline-app" style="max-width:1400px;margin:0 auto;">
+    <h1 style="margin:0 0 8px;font-size:clamp(1.8rem,3vw,2.8rem);">Animierte n-Gramm-Demo</h1>
+    <p style="color:#9ca3af;margin:0 0 22px;line-height:1.5;max-width:1000px;">
+      Links sehen Sie die gelernten Sätze. In der Mitte geben Sie Text ein. Rechts sehen Sie live,
+      wie ein n-Gramm-System den letzten Kontext auswählt und daraus mögliche Fortsetzungen ableitet.
+      Einstellbar für <strong>n = 1 bis 3</strong>.
+    </p>
 
-<style>
-  #ngram-moodle-demo {
-    --ng-bg: #f8fafc;
-    --ng-panel: #ffffff;
-    --ng-panel-soft: #f1f5f9;
-    --ng-text: #0f172a;
-    --ng-muted: #475569;
-    --ng-accent: #0284c7;
-    --ng-accent-soft: #e0f2fe;
-    --ng-border: #cbd5e1;
-    --ng-success: #166534;
-    --ng-success-bg: #dcfce7;
-    --ng-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
-    font-family: Arial, Helvetica, sans-serif;
-    color: var(--ng-text);
-    line-height: 1.5;
-    margin: 1rem 0;
-  }
-
-  #ngram-moodle-demo * {
-    box-sizing: border-box;
-  }
-
-  #ngram-moodle-demo .ng-wrap {
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  #ngram-moodle-demo .ng-title {
-    margin: 0 0 0.35rem;
-    font-size: 1.8rem;
-    line-height: 1.2;
-  }
-
-  #ngram-moodle-demo .ng-subtitle {
-    margin: 0 0 1rem;
-    color: var(--ng-muted);
-  }
-
-  #ngram-moodle-demo .ng-controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    align-items: center;
-    background: var(--ng-panel);
-    border: 1px solid var(--ng-border);
-    border-radius: 14px;
-    padding: 0.9rem 1rem;
-    box-shadow: var(--ng-shadow);
-    margin-bottom: 1rem;
-  }
-
-  #ngram-moodle-demo .ng-control-group {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-
-  #ngram-moodle-demo label {
-    font-weight: bold;
-  }
-
-  #ngram-moodle-demo select,
-  #ngram-moodle-demo button,
-  #ngram-moodle-demo textarea {
-    font: inherit;
-  }
-
-  #ngram-moodle-demo select,
-  #ngram-moodle-demo textarea {
-    border: 1px solid var(--ng-border);
-    border-radius: 10px;
-    background: #fff;
-    color: var(--ng-text);
-  }
-
-  #ngram-moodle-demo select,
-  #ngram-moodle-demo button {
-    padding: 0.6rem 0.8rem;
-  }
-
-  #ngram-moodle-demo button {
-    border: 1px solid var(--ng-border);
-    border-radius: 999px;
-    background: var(--ng-panel-soft);
-    color: var(--ng-text);
-    cursor: pointer;
-  }
-
-  #ngram-moodle-demo button:hover {
-    border-color: var(--ng-accent);
-    background: var(--ng-accent-soft);
-  }
-
-  #ngram-moodle-demo .ng-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 1rem;
-  }
-
-  #ngram-moodle-demo .ng-panel {
-    background: var(--ng-panel);
-    border: 1px solid var(--ng-border);
-    border-radius: 16px;
-    padding: 1rem;
-    box-shadow: var(--ng-shadow);
-    min-height: 420px;
-  }
-
-  #ngram-moodle-demo .ng-panel h2 {
-    margin-top: 0;
-    margin-bottom: 0.35rem;
-    font-size: 1.2rem;
-  }
-
-  #ngram-moodle-demo .ng-lead {
-    color: var(--ng-muted);
-    margin-top: 0;
-  }
-
-  #ngram-moodle-demo .ng-badge {
-    display: inline-block;
-    padding: 0.1rem 0.5rem;
-    margin-left: 0.35rem;
-    border-radius: 999px;
-    font-size: 0.8rem;
-    background: var(--ng-accent-soft);
-    color: var(--ng-accent);
-    border: 1px solid #bae6fd;
-    vertical-align: middle;
-  }
-
-  #ngram-moodle-demo .ng-list,
-  #ngram-moodle-demo .ng-legend {
-    display: grid;
-    gap: 0.6rem;
-  }
-
-  #ngram-moodle-demo .ng-list-item,
-  #ngram-moodle-demo .ng-note,
-  #ngram-moodle-demo .ng-step-box,
-  #ngram-moodle-demo .ng-empty {
-    border: 1px solid var(--ng-border);
-    border-radius: 12px;
-    background: var(--ng-panel-soft);
-  }
-
-  #ngram-moodle-demo .ng-list-item {
-    padding: 0.75rem;
-  }
-
-  #ngram-moodle-demo .ng-list-item.ng-match {
-    border-color: var(--ng-accent);
-    background: var(--ng-accent-soft);
-  }
-
-  #ngram-moodle-demo textarea {
-    width: 100%;
-    min-height: 160px;
-    padding: 0.8rem;
-    resize: vertical;
-  }
-
-  #ngram-moodle-demo textarea:focus,
-  #ngram-moodle-demo select:focus {
-    outline: 2px solid var(--ng-accent-soft);
-    border-color: var(--ng-accent);
-  }
-
-  #ngram-moodle-demo .ng-chip-row,
-  #ngram-moodle-demo .ng-token-row,
-  #ngram-moodle-demo .ng-prediction-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  #ngram-moodle-demo .ng-chip {
-    background: #fff;
-  }
-
-  #ngram-moodle-demo .ng-step-box {
-    padding: 0.9rem;
-    margin-top: 1rem;
-  }
-
-  #ngram-moodle-demo .ng-token {
-    padding: 0.45rem 0.75rem;
-    border-radius: 999px;
-    border: 1px solid var(--ng-border);
-    background: #fff;
-    opacity: 0;
-    transform: translateY(6px);
-    animation: ng-pop-in 0.25s forwards;
-  }
-
-  #ngram-moodle-demo .ng-token.ng-context {
-    border-color: var(--ng-accent);
-    background: var(--ng-accent-soft);
-    font-weight: bold;
-  }
-
-  #ngram-moodle-demo .ng-arrow {
-    font-size: 1.2rem;
-    color: var(--ng-accent);
-    margin: 0.6rem 0;
-  }
-
-  #ngram-moodle-demo .ng-candidate {
-    min-width: 120px;
-    padding: 0.7rem 0.8rem;
-    border-radius: 12px;
-    border: 1px solid #bae6fd;
-    background: #f0fdf4;
-    opacity: 0;
-    transform: translateX(8px);
-    animation: ng-slide-in 0.25s forwards;
-  }
-
-  #ngram-moodle-demo .ng-small {
-    font-size: 0.88rem;
-    color: var(--ng-muted);
-  }
-
-  #ngram-moodle-demo .ng-note,
-  #ngram-moodle-demo .ng-empty {
-    padding: 0.8rem;
-    margin-top: 1rem;
-  }
-
-  #ngram-moodle-demo .ng-test-status {
-    margin-top: 0.75rem;
-    padding: 0.55rem 0.75rem;
-    border-radius: 10px;
-    background: var(--ng-success-bg);
-    color: var(--ng-success);
-    font-size: 0.92rem;
-  }
-
-  @keyframes ng-pop-in {
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes ng-slide-in {
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-
-  @media (max-width: 1000px) {
-    #ngram-moodle-demo .ng-grid {
-      grid-template-columns: 1fr;
-    }
-
-    #ngram-moodle-demo .ng-panel {
-      min-height: auto;
-    }
-  }
-</style>
-
-<script>
-(function () {
-  var root = document.getElementById("ngram-moodle-demo");
-  if (!root) return;
-
-  root.innerHTML = `
-    <div class="ng-wrap">
-      <h1 class="ng-title">Animierte n-Gramm-Demo</h1>
-      <p class="ng-subtitle">
-        Links stehen die gelernten Sätze. In der Mitte gibst du Text ein. Rechts siehst du live,
-        wie ein n-Gramm-System den letzten Kontext auswählt und daraus mögliche Fortsetzungen ableitet.
-        Stellbar für <strong>n = 1 bis 3</strong>.
-      </p>
-
-      <div class="ng-controls">
-        <div class="ng-control-group">
-          <label for="ngram-nSelect">n-Gramm:</label>
-          <select id="ngram-nSelect">
-            <option value="1">n = 1 (Unigramm)</option>
-            <option value="2">n = 2 (Bigramm)</option>
-            <option value="3" selected>n = 3 (Trigramm)</option>
-          </select>
-        </div>
-        <div class="ng-control-group">
-          <button id="ngram-clearBtn" type="button">Eingabe leeren</button>
-          <button id="ngram-sampleBtn" type="button">Beispiel laden</button>
-        </div>
+    <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:18px;background:rgba(17,24,39,.8);border:1px solid #334155;border-radius:18px;padding:14px 16px;backdrop-filter:blur(10px);">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <label for="ngram-inline-n" style="color:#9ca3af;font-size:.95rem;">n-Gramm:</label>
+        <select id="ngram-inline-n" style="background:#1f2937;color:#e5e7eb;border:1px solid #334155;border-radius:12px;padding:10px 12px;font:inherit;">
+          <option value="1">n = 1 (Unigramm)</option>
+          <option value="2">n = 2 (Bigramm)</option>
+          <option value="3" selected>n = 3 (Trigramm)</option>
+        </select>
       </div>
 
-      <div class="ng-grid">
-        <section class="ng-panel">
-          <h2>Trainingsdaten</h2>
-          <p class="ng-lead">Diese Sätze bilden das gelernte Wissen des n-Gramm-Modells.</p>
-          <div id="ngram-corpusList" class="ng-list"></div>
-          <div id="ngram-testStatus" class="ng-test-status" hidden></div>
-        </section>
-
-        <section class="ng-panel">
-          <h2>Deine Eingabe</h2>
-          <p class="ng-lead">Schreib einzelne Wörter oder Sätze. Das System verwendet die letzten Wörter als Kontext.</p>
-          <textarea id="ngram-inputText" placeholder="Zum Beispiel: ich gehe in die ..."></textarea>
-
-          <div class="ng-chip-row" style="margin-top: 0.9rem;">
-            <button class="ng-chip" type="button" data-text="ich gehe in die">ich gehe in die</button>
-            <button class="ng-chip" type="button" data-text="wir lernen mit">wir lernen mit</button>
-            <button class="ng-chip" type="button" data-text="das wetter ist">das wetter ist</button>
-            <button class="ng-chip" type="button" data-text="ich trinke gerne">ich trinke gerne</button>
-          </div>
-
-          <div class="ng-step-box">
-            <div><strong>Tokenisierung:</strong> Die Eingabe wird in Wörter zerlegt.</div>
-            <div class="ng-token-row" id="ngram-tokenRow" style="margin-top: 0.75rem;"></div>
-          </div>
-
-          <div class="ng-legend" style="margin-top: 1rem;">
-            <div class="ng-note">Hell markierte Tokens = der aktuelle Kontext, den das n-Gramm-Modell benutzt.</div>
-            <div class="ng-note">Je größer n ist, desto mehr letzte Wörter werden berücksichtigt.</div>
-          </div>
-        </section>
-
-        <section class="ng-panel">
-          <h2>Vorhersage des Systems <span class="ng-badge" id="ngram-modeBadge">Trigramm</span></h2>
-          <p class="ng-lead">Rechts wird gezeigt, wie das Modell den Kontext auswählt und welche Fortsetzungen dazu im Trainingskorpus vorkommen.</p>
-
-          <div class="ng-step-box">
-            <div><strong>Schritt 1:</strong> Ausgewählter Kontext</div>
-            <div class="ng-token-row" id="ngram-contextRow" style="margin-top: 0.75rem;"></div>
-            <div class="ng-arrow">→</div>
-            <div><strong>Schritt 2:</strong> Mögliche nächste Wörter</div>
-            <div class="ng-prediction-row" id="ngram-predictionRow" style="margin-top: 0.75rem;"></div>
-          </div>
-
-          <div class="ng-step-box" id="ngram-explanationBox">Noch keine Eingabe vorhanden.</div>
-          <div class="ng-empty" id="ngram-fallbackBox" hidden>
-            Für diesen Kontext gibt es im kleinen Beispielkorpus keine direkte Fortsetzung. Probier z. B. „ich gehe in die“.
-          </div>
-        </section>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <button id="ngram-inline-clear" type="button" style="background:#1f2937;color:#e5e7eb;border:1px solid #334155;border-radius:12px;padding:10px 12px;font:inherit;cursor:pointer;">Eingabe leeren</button>
+        <button id="ngram-inline-sample" type="button" style="background:#1f2937;color:#e5e7eb;border:1px solid #334155;border-radius:12px;padding:10px 12px;font:inherit;cursor:pointer;">Beispiel laden</button>
+        <button id="ngram-inline-reset-corpus" type="button" style="background:#1f2937;color:#e5e7eb;border:1px solid #334155;border-radius:12px;padding:10px 12px;font:inherit;cursor:pointer;">Trainingskorpus zurücksetzen</button>
       </div>
     </div>
-  `;
 
-  var corpus = [
-    "ich gehe in die schule",
-    "ich gehe in die stadt",
-    "ich gehe in den park",
-    "ich gehe heute nach hause",
-    "ich trinke gerne kaffee",
-    "ich trinke gerne tee",
-    "ich esse gerne pizza",
-    "wir lernen mit einem modell",
-    "wir lernen mit beispielen",
-    "wir lernen heute javascript",
-    "das wetter ist heute schön",
-    "das wetter ist morgen kalt",
-    "das wetter wird besser",
-    "die sonne scheint heute",
-    "die kinder spielen im park",
-    "ein modell sagt das nächste wort voraus",
-    "ein n gramm modell nutzt wahrscheinlichkeiten",
-    "sprache besteht aus wörtern",
-    "das modell betrachtet die letzten wörter",
-    "heute ist ein schöner tag"
-  ];
+    <div id="ngram-inline-grid" style="display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:20px;">
+      <section style="background:rgba(17,24,39,.9);border:1px solid #334155;border-radius:22px;padding:20px;min-height:520px;box-shadow:0 18px 50px rgba(0,0,0,.25);">
+        <h2 style="margin:0 0 6px;font-size:1.25rem;">Trainingsdaten</h2>
+        <p style="margin:0;color:#9ca3af;line-height:1.45;">Diese Sätze bilden das gelernte Wissen des n-Gramm-Modells. Sie können den Korpus direkt bearbeiten.</p>
 
-  var inputText = root.querySelector("#ngram-inputText");
-  var tokenRow = root.querySelector("#ngram-tokenRow");
-  var contextRow = root.querySelector("#ngram-contextRow");
-  var predictionRow = root.querySelector("#ngram-predictionRow");
-  var explanationBox = root.querySelector("#ngram-explanationBox");
-  var fallbackBox = root.querySelector("#ngram-fallbackBox");
-  var nSelect = root.querySelector("#ngram-nSelect");
-  var modeBadge = root.querySelector("#ngram-modeBadge");
-  var clearBtn = root.querySelector("#ngram-clearBtn");
-  var sampleBtn = root.querySelector("#ngram-sampleBtn");
-  var corpusList = root.querySelector("#ngram-corpusList");
-  var testStatus = root.querySelector("#ngram-testStatus");
-  var chips = root.querySelectorAll(".ng-chip");
+        <label for="ngram-inline-corpus-editor" style="display:block;margin-top:16px;color:#9ca3af;font-size:.95rem;">Editierbarer Trainingskorpus (ein Satz pro Zeile):</label>
+        <textarea id="ngram-inline-corpus-editor" style="width:100%;min-height:220px;resize:vertical;border-radius:16px;border:1px solid #334155;background:#0b1220;color:#e5e7eb;padding:14px;font:inherit;line-height:1.5;outline:none;margin-top:8px;"></textarea>
 
-  function normalize(text) {
-    return String(text)
-      .toLowerCase()
-      .replace(/[.,!?;:()\[\]"]+/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-  }
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+          <button id="ngram-inline-apply-corpus" type="button" style="background:#1f2937;color:#e5e7eb;border:1px solid #334155;border-radius:12px;padding:10px 12px;font:inherit;cursor:pointer;">Korpus übernehmen</button>
+          <button id="ngram-inline-add-example" type="button" style="background:#1f2937;color:#e5e7eb;border:1px solid #334155;border-radius:12px;padding:10px 12px;font:inherit;cursor:pointer;">Beispiel-Sätze ergänzen</button>
+        </div>
 
-  function tokenize(text) {
-    var clean = normalize(text);
-    return clean ? clean.split(" ") : [];
-  }
+        <div id="ngram-inline-corpus-info" style="margin-top:12px;padding:12px;border-radius:14px;background:#0b1220;border:1px solid #334155;color:#9ca3af;">Noch keine Änderungen vorgenommen.</div>
+        <div id="ngram-inline-corpus" style="display:grid;gap:10px;margin-top:16px;"></div>
+        <div id="ngram-inline-tests" style="margin-top:12px;color:#86efac;font-size:.9rem;"></div>
+      </section>
 
-  function buildModel(n) {
-    var contextSize = Math.max(0, n - 1);
-    var counts = new Map();
+      <section style="background:rgba(17,24,39,.9);border:1px solid #334155;border-radius:22px;padding:20px;min-height:520px;box-shadow:0 18px 50px rgba(0,0,0,.25);">
+        <h2 style="margin:0 0 6px;font-size:1.25rem;">Ihre Eingabe</h2>
+        <p style="margin:0;color:#9ca3af;line-height:1.45;">Schreiben Sie einzelne Wörter oder Sätze. Das System zerlegt die Eingabe in Tokens und verwendet die letzten Wörter als Kontext.</p>
+        <textarea id="ngram-inline-input" placeholder="Zum Beispiel: ich gehe in die ..." style="width:100%;min-height:180px;resize:vertical;border-radius:16px;border:1px solid #334155;background:#0b1220;color:#e5e7eb;padding:14px;font:inherit;line-height:1.5;outline:none;margin-top:16px;"></textarea>
 
-    corpus.forEach(function (sentence) {
-      var words = tokenize(sentence);
-      for (var i = contextSize; i < words.length; i += 1) {
-        var context = words.slice(i - contextSize, i);
-        var key = context.join(" ");
-        var nextWord = words[i];
+        <div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="ngram-inline-chip" type="button" data-text="ich gehe in die" style="background:#152238;border:1px solid #22324a;color:#e5e7eb;border-radius:999px;padding:8px 12px;cursor:pointer;">ich gehe in die</button>
+          <button class="ngram-inline-chip" type="button" data-text="wir lernen mit" style="background:#152238;border:1px solid #22324a;color:#e5e7eb;border-radius:999px;padding:8px 12px;cursor:pointer;">wir lernen mit</button>
+          <button class="ngram-inline-chip" type="button" data-text="das wetter ist" style="background:#152238;border:1px solid #22324a;color:#e5e7eb;border-radius:999px;padding:8px 12px;cursor:pointer;">das wetter ist</button>
+          <button class="ngram-inline-chip" type="button" data-text="ich trinke gerne" style="background:#152238;border:1px solid #22324a;color:#e5e7eb;border-radius:999px;padding:8px 12px;cursor:pointer;">ich trinke gerne</button>
+        </div>
 
-        if (!counts.has(key)) {
-          counts.set(key, new Map());
+        <div style="margin-top:18px;padding:16px;border-radius:18px;background:#0b1220;border:1px solid #334155;line-height:1.6;">
+          <div><strong>Tokenisierung:</strong> Die Eingabe wird in Wörter zerlegt.</div>
+          <div id="ngram-inline-tokens" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;min-height:46px;align-items:flex-start;"></div>
+        </div>
+
+        <div style="display:grid;gap:10px;margin-top:16px;">
+          <div style="padding:12px;border-radius:14px;background:#0b1220;border:1px solid #334155;color:#9ca3af;">Hell markierte Tokens = der aktuelle Kontext, den das n-Gramm-Modell benutzt.</div>
+          <div style="padding:12px;border-radius:14px;background:#0b1220;border:1px solid #334155;color:#9ca3af;">Je größer n ist, desto mehr letzte Wörter werden berücksichtigt.</div>
+        </div>
+      </section>
+
+      <section style="background:rgba(17,24,39,.9);border:1px solid #334155;border-radius:22px;padding:20px;min-height:520px;box-shadow:0 18px 50px rgba(0,0,0,.25);">
+        <h2 style="margin:0 0 6px;font-size:1.25rem;">Vorhersage des Systems <span id="ngram-inline-badge" style="display:inline-block;background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.3);padding:2px 8px;border-radius:999px;font-size:.82rem;margin-left:8px;vertical-align:middle;">Trigramm</span></h2>
+        <p style="margin:0;color:#9ca3af;line-height:1.45;">Rechts wird animiert gezeigt, wie das Modell den Kontext auswählt und welche Fortsetzungen dazu im aktuellen Trainingskorpus gefunden wurden.</p>
+
+        <div style="margin-top:18px;padding:16px;border-radius:18px;background:#0b1220;border:1px solid #334155;line-height:1.6;">
+          <div><strong>Schritt 1:</strong> Ausgewählter Kontext</div>
+          <div id="ngram-inline-context" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;min-height:46px;align-items:flex-start;"></div>
+          <div style="font-size:1.3rem;color:#38bdf8;margin:14px 0;">→</div>
+          <div><strong>Schritt 2:</strong> Mögliche nächste Wörter</div>
+          <div id="ngram-inline-predictions" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;min-height:46px;align-items:flex-start;"></div>
+        </div>
+
+        <div id="ngram-inline-explanation" style="margin-top:18px;padding:16px;border-radius:18px;background:#0b1220;border:1px solid #334155;line-height:1.6;">Noch keine Eingabe vorhanden.</div>
+
+        <div id="ngram-inline-fallback" hidden style="margin-top:18px;padding:14px;border-radius:16px;border:1px dashed #334155;color:#9ca3af;">
+          Für diesen Kontext gibt es im aktuellen Trainingskorpus keine direkte Fortsetzung. Probieren Sie z. B.
+          „ich gehe in die“ oder „das wetter ist“.
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    var root = document.getElementById("ngram-inline-app");
+    if (!root) return;
+
+    var defaultCorpus = [
+      "ich gehe in die schule",
+      "ich gehe in die stadt",
+      "ich gehe in den park",
+      "ich gehe heute nach hause",
+      "ich trinke gerne kaffee",
+      "ich trinke gerne tee",
+      "ich esse gerne pizza",
+      "wir lernen mit einem modell",
+      "wir lernen mit beispielen",
+      "wir lernen heute javascript",
+      "das wetter ist heute schön",
+      "das wetter ist morgen kalt",
+      "das wetter wird besser",
+      "die sonne scheint heute",
+      "die kinder spielen im park",
+      "ein modell sagt das nächste wort voraus",
+      "ein n gramm modell nutzt wahrscheinlichkeiten",
+      "sprache besteht aus wörtern",
+      "das modell betrachtet die letzten wörter",
+      "heute ist ein schöner tag"
+    ];
+
+    var extraExamples = [
+      "sie lernen heute mit texten",
+      "sie arbeiten mit einem beispiel",
+      "ein sprachmodell nutzt kontext",
+      "ein modell berechnet wahrscheinlichkeiten"
+    ];
+
+    var corpus = defaultCorpus.slice();
+
+    var inputText = root.querySelector("#ngram-inline-input");
+    var tokenRow = root.querySelector("#ngram-inline-tokens");
+    var contextRow = root.querySelector("#ngram-inline-context");
+    var predictionRow = root.querySelector("#ngram-inline-predictions");
+    var explanationBox = root.querySelector("#ngram-inline-explanation");
+    var fallbackBox = root.querySelector("#ngram-inline-fallback");
+    var nSelect = root.querySelector("#ngram-inline-n");
+    var modeBadge = root.querySelector("#ngram-inline-badge");
+    var clearBtn = root.querySelector("#ngram-inline-clear");
+    var sampleBtn = root.querySelector("#ngram-inline-sample");
+    var resetCorpusBtn = root.querySelector("#ngram-inline-reset-corpus");
+    var applyCorpusBtn = root.querySelector("#ngram-inline-apply-corpus");
+    var addExampleBtn = root.querySelector("#ngram-inline-add-example");
+    var corpusEditor = root.querySelector("#ngram-inline-corpus-editor");
+    var corpusInfo = root.querySelector("#ngram-inline-corpus-info");
+    var corpusList = root.querySelector("#ngram-inline-corpus");
+    var testStatus = root.querySelector("#ngram-inline-tests");
+    var chips = root.querySelectorAll(".ngram-inline-chip");
+    var grid = root.querySelector("#ngram-inline-grid");
+
+    function normalize(text) {
+      return String(text)
+        .toLowerCase()
+        .replace(/[.,!?;:()\[\]"]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function tokenize(text) {
+      var clean = normalize(text);
+      return clean ? clean.split(" ") : [];
+    }
+
+    function corpusToEditorText(list) {
+      return list.join("\n");
+    }
+
+    function parseCorpusEditor(text) {
+      return String(text)
+        .split(/\r?\n/)
+        .map(function (line) { return line.trim(); })
+        .filter(function (line) { return line.length > 0; });
+    }
+
+    function setCorpus(newCorpus, reason) {
+      corpus = newCorpus.slice();
+      corpusEditor.value = corpusToEditorText(corpus);
+      corpusInfo.textContent = "Aktiver Trainingskorpus: " + corpus.length + " Satz" + (corpus.length === 1 ? "" : "e") + ". " + reason;
+      renderCorpus([]);
+      update();
+    }
+
+    function buildModel(n) {
+      var contextSize = Math.max(0, n - 1);
+      var counts = new Map();
+
+      corpus.forEach(function (sentence) {
+        var words = tokenize(sentence);
+        for (var i = contextSize; i < words.length; i += 1) {
+          var context = words.slice(i - contextSize, i);
+          var key = context.join(" ");
+          var nextWord = words[i];
+          if (!counts.has(key)) counts.set(key, new Map());
+          var nextMap = counts.get(key);
+          nextMap.set(nextWord, (nextMap.get(nextWord) || 0) + 1);
+        }
+      });
+
+      return counts;
+    }
+
+    function labelForN(n) {
+      if (n === 1) return "Unigramm";
+      if (n === 2) return "Bigramm";
+      return "Trigramm";
+    }
+
+    function getPredictionsForInput(text, n) {
+      var tokens = tokenize(text);
+      var requestedN = n;
+      var effectiveN = n;
+      var model;
+      var contextSize;
+      var context;
+      var key;
+      var nextMap;
+      var sorted = [];
+      var fallbackNotice = "";
+
+      while (effectiveN >= 1) {
+        contextSize = Math.max(0, effectiveN - 1);
+        context = contextSize === 0 ? [] : tokens.slice(-contextSize);
+
+        if (tokens.length < contextSize) {
+          effectiveN -= 1;
+          continue;
         }
 
-        var nextMap = counts.get(key);
-        nextMap.set(nextWord, (nextMap.get(nextWord) || 0) + 1);
+        key = context.join(" ");
+        model = buildModel(effectiveN);
+        nextMap = model.get(key) || new Map();
+        sorted = Array.from(nextMap.entries()).sort(function (a, b) {
+          if (b[1] !== a[1]) return b[1] - a[1];
+          return a[0].localeCompare(b[0]);
+        });
+
+        if (sorted.length > 0 || effectiveN === 1) {
+          break;
+        }
+
+        effectiveN -= 1;
       }
-    });
 
-    return counts;
-  }
-
-  function labelForN(n) {
-    if (n === 1) return "Unigramm";
-    if (n === 2) return "Bigramm";
-    return "Trigramm";
-  }
-
-  function getPredictionsForInput(text, n) {
-    var tokens = tokenize(text);
-    var contextSize = Math.max(0, n - 1);
-    var context = contextSize === 0 ? [] : tokens.slice(-contextSize);
-    var key = context.join(" ");
-    var model = buildModel(n);
-    var nextMap = model.get(key) || new Map();
-    var sorted = Array.from(nextMap.entries()).sort(function (a, b) {
-      if (b[1] !== a[1]) return b[1] - a[1];
-      return a[0].localeCompare(b[0]);
-    });
-
-    return { tokens: tokens, context: context, key: key, sorted: sorted };
-  }
-
-  function sentenceMatchesContext(sentence, context) {
-    if (!context.length) return false;
-    var words = tokenize(sentence);
-    for (var i = 0; i <= words.length - context.length; i += 1) {
-      var slice = words.slice(i, i + context.length).join(" ");
-      if (slice === context.join(" ")) return true;
-    }
-    return false;
-  }
-
-  function renderTokens(tokens, container, highlightFrom) {
-    container.innerHTML = "";
-    if (!tokens.length) return;
-
-    tokens.forEach(function (token, index) {
-      var el = document.createElement("div");
-      el.className = "ng-token";
-      if (typeof highlightFrom === "number" && index >= highlightFrom) {
-        el.className += " ng-context";
+      if (effectiveN < 1) {
+        effectiveN = 1;
+        contextSize = 0;
+        context = [];
+        key = "";
+        sorted = [];
       }
-      el.textContent = token;
-      el.style.animationDelay = (index * 40) + "ms";
-      container.appendChild(el);
-    });
-  }
 
-  function renderPredictions(entries) {
-    predictionRow.innerHTML = "";
-    entries.forEach(function (entry, index) {
-      var word = entry[0];
-      var count = entry[1];
-      var el = document.createElement("div");
-      el.className = "ng-candidate";
-      el.style.animationDelay = (index * 90) + "ms";
-      el.innerHTML = "<strong>" + word + "</strong><br><span class=\"ng-small\">Treffer im Korpus: " + count + "</span>";
-      predictionRow.appendChild(el);
-    });
-  }
-
-  function renderCorpus(activeContext) {
-    corpusList.innerHTML = "";
-    corpus.forEach(function (sentence) {
-      var el = document.createElement("div");
-      el.className = "ng-list-item";
-      if (activeContext && sentenceMatchesContext(sentence, activeContext)) {
-        el.className += " ng-match";
+      if (effectiveN !== requestedN) {
+        fallbackNotice = "Zu wenig oder kein passender Kontext für n = " + requestedN + ". Vorübergehend wird " + labelForN(effectiveN) + " verwendet.";
       }
-      el.textContent = sentence;
-      corpusList.appendChild(el);
-    });
-  }
 
-  function update() {
-    var n = Number(nSelect.value);
-    var contextSize = Math.max(0, n - 1);
-    var result = getPredictionsForInput(inputText.value, n);
-    var tokens = result.tokens;
-    var context = result.context;
-    var key = result.key;
-    var sorted = result.sorted;
-
-    modeBadge.textContent = labelForN(n);
-    renderTokens(tokens, tokenRow, contextSize === 0 ? null : Math.max(0, tokens.length - contextSize));
-    renderTokens(context, contextRow, 0);
-    renderCorpus(context);
-
-    predictionRow.innerHTML = "";
-    fallbackBox.hidden = true;
-
-    if (!tokens.length && n > 1) {
-      explanationBox.innerHTML = "<strong>So arbeitet das Modell:</strong><br>Bei n = " + n + " schaut es auf die letzten <strong>" + contextSize + "</strong> Wörter. Gib links Text ein, damit daraus ein Kontext gebildet werden kann.";
-      return;
+      return {
+        tokens: tokens,
+        context: context,
+        key: key,
+        sorted: sorted,
+        requestedN: requestedN,
+        effectiveN: effectiveN,
+        fallbackNotice: fallbackNotice
+      };
     }
 
-    if (!sorted.length) {
-      explanationBox.innerHTML = "<strong>Kein Treffer im Beispielkorpus.</strong><br>Das Modell sucht nach genau diesem Kontext: <strong>" + (key || "(leer)") + "</strong>. Findet es ihn nicht im Trainingsmaterial, kann es keine direkte Fortsetzung ableiten.";
-      fallbackBox.hidden = false;
-      return;
+    function sentenceMatchesContext(sentence, context) {
+      if (!context.length) return false;
+      var words = tokenize(sentence);
+      for (var i = 0; i <= words.length - context.length; i += 1) {
+        if (words.slice(i, i + context.length).join(" ") === context.join(" ")) return true;
+      }
+      return false;
     }
 
-    renderPredictions(sorted);
-    explanationBox.innerHTML = "<strong>Erklärung:</strong><br>Das Modell verwendet <strong>n = " + n + "</strong> und damit einen Kontext aus <strong>" + contextSize + "</strong> Wort" + (contextSize === 1 ? "" : "en") + ".<br>Aktueller Kontext: <strong>" + (key || "(kein Kontext bei Unigramm)") + "</strong><br>Danach schaut es im Trainingskorpus nach, welche Wörter auf diesen Kontext folgen. Die Kandidaten rechts sind nach Häufigkeit sortiert.";
-  }
+    function tokenStyle(isContext, delay) {
+      return [
+        "padding:8px 12px",
+        "border-radius:999px",
+        "background:" + (isContext ? "rgba(56,189,248,.12)" : "#132033"),
+        "border:1px solid " + (isContext ? "#38bdf8" : "#22324a"),
+        "box-shadow:" + (isContext ? "0 0 0 2px rgba(56,189,248,.08)" : "none"),
+        "opacity:0",
+        "transform:translateY(8px) scale(.98)",
+        "animation:ngramInlinePop .35s forwards",
+        "animation-delay:" + delay + "ms"
+      ].join(";");
+    }
 
-  function runTests() {
-    console.assert(normalize("  Hallo, Welt!  ") === "hallo welt", "normalize sollte Satzzeichen entfernen");
+    function candidateStyle(delay) {
+      return [
+        "padding:12px 14px",
+        "border-radius:16px",
+        "background:linear-gradient(135deg,rgba(34,197,94,.18),rgba(56,189,248,.14))",
+        "border:1px solid rgba(125,211,252,.35)",
+        "opacity:0",
+        "transform:translateX(12px)",
+        "animation:ngramInlineSlide .35s forwards",
+        "animation-delay:" + delay + "ms"
+      ].join(";");
+    }
 
-    var tok = tokenize("ich gehe in die");
-    console.assert(tok.length === 4, "tokenize sollte 4 Tokens liefern");
-    console.assert(tok[0] === "ich" && tok[3] === "die", "tokenize sollte richtige Reihenfolge liefern");
+    function corpusItemStyle(active) {
+      return [
+        "padding:12px",
+        "border-radius:14px",
+        "background:" + (active ? "rgba(56,189,248,.12)" : "#0b1220"),
+        "border:1px solid " + (active ? "#38bdf8" : "#334155"),
+        "color:" + (active ? "#e5e7eb" : "#9ca3af")
+      ].join(";");
+    }
 
-    var tri = getPredictionsForInput("ich gehe in die", 3);
-    console.assert(tri.key === "in die", "Trigramm-Kontext sollte 'in die' sein");
-    console.assert(tri.sorted.length === 2, "Fuer 'in die' sollten 2 Treffer existieren");
+    function renderTokens(tokens, container, highlightFrom) {
+      container.innerHTML = "";
+      if (!tokens.length) return;
+      tokens.forEach(function (token, index) {
+        var el = document.createElement("div");
+        var isContext = typeof highlightFrom === "number" && index >= highlightFrom;
+        el.setAttribute("style", tokenStyle(isContext, index * 40));
+        el.textContent = token;
+        container.appendChild(el);
+      });
+    }
 
-    var bi = getPredictionsForInput("ich trinke", 2);
-    console.assert(bi.sorted.some(function (item) { return item[0] === "gerne"; }), "Bigramm sollte 'gerne' vorhersagen");
+    function renderPredictions(entries) {
+      predictionRow.innerHTML = "";
+      entries.forEach(function (entry, index) {
+        var el = document.createElement("div");
+        el.setAttribute("style", candidateStyle(index * 90));
+        el.innerHTML = "<strong style=\"font-size:1.05rem;\">" + entry[0] + "</strong><br><span style=\"color:#9ca3af;font-size:.92rem;\">Treffer im Korpus: " + entry[1] + "</span>";
+        predictionRow.appendChild(el);
+      });
+    }
 
-    var miss = getPredictionsForInput("unbekannter kontext", 3);
-    console.assert(miss.sorted.length === 0, "Unbekannter Kontext sollte keine Treffer liefern");
+    function renderCorpus(activeContext) {
+      corpusList.innerHTML = "";
+      corpus.forEach(function (sentence) {
+        var el = document.createElement("div");
+        el.setAttribute("style", corpusItemStyle(sentenceMatchesContext(sentence, activeContext)));
+        el.textContent = sentence;
+        corpusList.appendChild(el);
+      });
+    }
 
-    testStatus.hidden = false;
-    testStatus.textContent = "Selbsttests erfolgreich geladen.";
-  }
+    function updateLayout() {
+      if (window.innerWidth <= 1100) {
+        grid.style.gridTemplateColumns = "1fr";
+      } else {
+        grid.style.gridTemplateColumns = "1.1fr 1fr 1fr";
+      }
+    }
 
-  inputText.addEventListener("input", update);
-  nSelect.addEventListener("change", update);
-  clearBtn.addEventListener("click", function () {
-    inputText.value = "";
-    update();
-  });
-  sampleBtn.addEventListener("click", function () {
-    inputText.value = "ich gehe in die";
-    update();
-  });
-  chips.forEach(function (chip) {
-    chip.addEventListener("click", function () {
-      inputText.value = chip.getAttribute("data-text") || "";
+    function update() {
+      var n = Number(nSelect.value);
+      var result = getPredictionsForInput(inputText.value, n);
+      var requestedContextSize = Math.max(0, n - 1);
+      var effectiveContextSize = Math.max(0, result.effectiveN - 1);
+      var noticeHtml = result.fallbackNotice ? "<br><span style=\"display:inline-block;margin-top:8px;color:#fbbf24;\"><strong>Hinweis:</strong> " + result.fallbackNotice + "</span>" : "";
+
+      modeBadge.textContent = labelForN(n);
+      renderTokens(result.tokens, tokenRow, effectiveContextSize === 0 ? null : Math.max(0, result.tokens.length - effectiveContextSize));
+      renderTokens(result.context, contextRow, 0);
+      renderCorpus(result.context);
+      predictionRow.innerHTML = "";
+      fallbackBox.hidden = true;
+
+      if (!corpus.length) {
+        explanationBox.innerHTML = "<strong>Kein Trainingskorpus vorhanden.</strong><br>Bitte tragen Sie links mindestens einen Satz ein und übernehmen Sie den Korpus.";
+        return;
+      }
+
+      if (!result.tokens.length && n > 1) {
+        explanationBox.innerHTML = "<strong>So arbeitet das Modell:</strong><br>Bei n = " + n + " schaut es idealerweise auf die letzten <strong>" + requestedContextSize + "</strong> Wörter. Geben Sie links Text ein, damit daraus ein Kontext gebildet werden kann.";
+        return;
+      }
+
+      if (!result.sorted.length) {
+        explanationBox.innerHTML = "<strong>Kein Treffer im Trainingskorpus.</strong><br>Das Modell sucht nach genau diesem Kontext: <strong>" + (result.key || "(leer)") + "</strong>. Findet es ihn nicht im Trainingsmaterial, kann es keine direkte Fortsetzung ableiten." + noticeHtml;
+        fallbackBox.hidden = false;
+        return;
+      }
+
+      renderPredictions(result.sorted);
+      explanationBox.innerHTML = "<strong>Erklärung:</strong><br>Gewählt wurde <strong>n = " + n + "</strong>. Aktiv verwendet wird <strong>" + labelForN(result.effectiveN) + "</strong> mit einem Kontext aus <strong>" + effectiveContextSize + "</strong> Wort" + (effectiveContextSize === 1 ? "" : "en") + ".<br>Aktueller Kontext: <strong>" + (result.key || "(kein Kontext bei Unigramm)") + "</strong><br>Danach schaut das Modell im Trainingskorpus nach, welche Wörter auf diesen Kontext folgen. Die Kandidaten rechts sind nach Häufigkeit sortiert." + noticeHtml;
+    }
+
+    function runTests() {
+      console.assert(normalize("  Hallo, Welt!  ") === "hallo welt", "normalize sollte Satzzeichen entfernen");
+      var tok = tokenize("ich gehe in die");
+      console.assert(tok.length === 4, "tokenize sollte 4 Tokens liefern");
+
+      var tri = getPredictionsForInput("ich gehe in die", 3);
+      console.assert(tri.key === "in die", "Trigramm-Kontext sollte 'in die' sein");
+      console.assert(tri.sorted.length === 2, "Fuer 'in die' sollten 2 Treffer existieren");
+
+      var bi = getPredictionsForInput("ich trinke", 2);
+      console.assert(bi.sorted.some(function (item) { return item[0] === "gerne"; }), "Bigramm sollte 'gerne' vorhersagen");
+
+      var uni = getPredictionsForInput("", 1);
+      console.assert(Array.isArray(uni.sorted), "Unigramm sollte ein Array liefern");
+
+      var fallbackShort = getPredictionsForInput("ich", 3);
+      console.assert(fallbackShort.effectiveN === 2, "Trigramm mit nur einem Wort sollte auf Bigramm zurueckfallen");
+      console.assert(fallbackShort.sorted.length > 0, "Backoff sollte bei kurzem Kontext Vorhersagen liefern");
+
+      var fallbackMissing = getPredictionsForInput("park", 3);
+      console.assert(fallbackMissing.effectiveN <= 2, "Bei fehlendem Trigramm-Kontext sollte ein Backoff stattfinden");
+
+      var parsed = parseCorpusEditor("eins\n\n zwei ");
+      console.assert(parsed.length === 2, "Leere Zeilen sollten entfernt werden");
+      console.assert(parsed[1] === "zwei", "Trimmen des editierbaren Korpus sollte funktionieren");
+
+      var tempCorpus = corpus.slice();
+      corpus = ["alpha beta gamma", "alpha beta delta"];
+      var edited = getPredictionsForInput("alpha beta", 3);
+      console.assert(edited.sorted.length === 2, "Editierter Korpus sollte neue Vorhersagen erzeugen");
+      var editedFallback = getPredictionsForInput("alpha", 3);
+      console.assert(editedFallback.effectiveN === 2, "Auch im editierten Korpus sollte Backoff funktionieren");
+      var editedUni = getPredictionsForInput("", 1);
+      console.assert(editedUni.sorted.length > 0, "Auch im editierten Korpus sollte Unigramm funktionieren");
+      corpus = tempCorpus;
+
+      var miss = getPredictionsForInput("unbekannter kontext", 3);
+      console.assert(miss.effectiveN >= 1, "Unbekannter Kontext sollte sauber verarbeitet werden");
+
+      testStatus.textContent = "Selbsttests erfolgreich geladen.";
+    }
+
+    if (!document.getElementById("ngram-inline-animations")) {
+      var anim = document.createElement("style");
+      anim.id = "ngram-inline-animations";
+      anim.textContent = "@keyframes ngramInlinePop{to{opacity:1;transform:translateY(0) scale(1)}}@keyframes ngramInlineSlide{to{opacity:1;transform:translateX(0)}}";
+      document.head.appendChild(anim);
+    }
+
+    inputText.addEventListener("input", update);
+    nSelect.addEventListener("change", update);
+    clearBtn.addEventListener("click", function () {
+      inputText.value = "";
       update();
     });
-  });
+    sampleBtn.addEventListener("click", function () {
+      inputText.value = "ich gehe in die";
+      update();
+    });
+    applyCorpusBtn.addEventListener("click", function () {
+      var parsed = parseCorpusEditor(corpusEditor.value);
+      if (!parsed.length) {
+        corpusInfo.textContent = "Bitte tragen Sie mindestens einen Satz ein, bevor Sie den Korpus übernehmen.";
+        return;
+      }
+      setCorpus(parsed, "Der editierte Korpus wurde übernommen.");
+    });
+    addExampleBtn.addEventListener("click", function () {
+      var merged = parseCorpusEditor(corpusEditor.value).concat(extraExamples).filter(function (line, index, arr) {
+        return line && arr.indexOf(line) === index;
+      });
+      corpusEditor.value = corpusToEditorText(merged);
+      corpusInfo.textContent = "Beispiel-Sätze wurden in den Editor eingefügt. Übernehmen Sie den Korpus, um sie zu aktivieren.";
+    });
+    resetCorpusBtn.addEventListener("click", function () {
+      setCorpus(defaultCorpus, "Der Standard-Korpus wurde wiederhergestellt.");
+    });
+    chips.forEach(function (chip) {
+      chip.addEventListener("click", function () {
+        inputText.value = chip.getAttribute("data-text") || "";
+        update();
+      });
+    });
+    window.addEventListener("resize", updateLayout);
 
-  renderCorpus([]);
-  runTests();
-  inputText.value = "ich gehe in die";
-  update();
-}());
-</script>
+    updateLayout();
+    corpusEditor.value = corpusToEditorText(corpus);
+    renderCorpus([]);
+    runTests();
+    corpusInfo.textContent = "Aktiver Trainingskorpus: " + corpus.length + " Sätze. Sie können links einzelne Sätze ergänzen, löschen oder umformulieren.";
+    inputText.value = "ich gehe in die";
+    update();
+  }());
+  </script>
+</body>
+</html>
